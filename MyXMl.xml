@@ -1,9 +1,26 @@
 <?xml version = "1.0" encoding="ISO-8859-1"?>
-<Candy>
-    <Cat>Tiger</Cat>
-    <Dog>Spooky</Dog>
-    <Hamster>Fluffy</Hamster>
-    <Snake>Ozzy</Snake>
-</Candy>
+<Candy xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:noNamespaceSchemaLocation="MyXSD.xsd">
+    <CandyInstance id="0" name="yanukontik" energy="9000" type="chocolate" hasWater="true" chocolate="white" >
+        <Ingridient amount="1" unit="miligram">Sugar</Ingridient>
+        <Ingridient amount="10" unit="miligram">Fructose</Ingridient>
+        <Ingridient amount="1" unit="miligram">Vanilin</Ingridient>
+        <Value amount="3" unit="gram">Protein</Value>
+        <Value amount="4" unit="gram">Fat</Value>
+        <Value amount="5" unit="gram">Carbohydrate</Value>
+        <Production>FirmA</Production>
+    </CandyInstance>
+
+    <CandyInstance id="1" name="yanukontik" energy="9000" type="chocolate" hasWater="true" chocolate="white" >
+        <Ingridient amount="1" unit="miligram">Sugar</Ingridient>
+        <Ingridient amount="10" unit="miligram">Fructose</Ingridient>
+        <Ingridient amount="1" unit="miligram">Vanilin</Ingridient>
+        <Value amount="3" unit="gram">Protein</Value>
+        <Value amount="4" unit="gram">Fat</Value>
+        <Value amount="5" unit="gram">Carbohydrate</Value>
+        <Production>FirmA</Production>
+    </CandyInstance>
     
-            
+    
+    
+</Candy>
