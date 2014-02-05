@@ -3,10 +3,14 @@ package main;
 public class CandyInstance {
 	Ingridients ingridients;
 	Values values;
+	
 	String producion;
 	Integer id;
 	String name;
 	Integer energy;
+	CandyType type;
+	ChocolateType chocolate;
+	boolean hasWater;
 	
 	
 	public Ingridients getIngridients() {
@@ -81,12 +85,24 @@ public class CandyInstance {
 		this.hasWater = hasWater;
 	}
 
-	CandyType type;
-	ChocolateType chocolate;
-	boolean hasWater;
+	
 	
 	public CandyInstance(){
 		
+		
+	}
+	
+	public void printEverything(){
+		System.out.println("Candy:");
+		System.out.println("	Ingridients "+ ingridients+"\n"+
+						   "	Values "+ values+'\n'+
+						   "	Production "+ producion +"\n"+
+						   "	Id "+ id.toString()+"\n"+
+						   "	Name "+ name+"\n"+
+						   "	Energy "+energy+"\n"+
+						   "	CandyType "+ type+"\n"+
+						   "	ChocolateType "+ chocolate+"\n"+
+						   "	hasWater "+hasWater);
 	}
 	
 	

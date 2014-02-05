@@ -18,5 +18,9 @@ public enum CandyType {
         }
         return null;
     }
-
+	
+	@Override
+	public String toString() {
+		return candyType;
+	}
 }

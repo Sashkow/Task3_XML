@@ -19,5 +19,11 @@ public enum ChocolateType {
         return null;
     }
 	
+	@Override
+	public String toString() {
+		// TODO Auto-generated method stub
+		return chocolateType;
+	}
+	
 
 }

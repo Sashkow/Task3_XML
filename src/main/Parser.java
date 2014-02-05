@@ -3,23 +3,42 @@ package main;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.text.Document;
 import javax.xml.XMLConstants;
 
+import org.xml.sax.Attributes;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamReader;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
+import main.Ingridients.Ingridient;
+import main.Values.Value;
+
+import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
+
+import com.sun.org.apache.xpath.internal.operations.Bool;
 
 
 public class Parser {
@@ -41,7 +60,7 @@ public class Parser {
         return true;
     }
     
-    public static void DOMParse(String xmlPath){
+    public static List<CandyInstance> DOMParse(String xmlPath){
     	
         DocumentBuilderFactory builderFactory =
         DocumentBuilderFactory.newInstance();
@@ -63,7 +82,11 @@ public class Parser {
     	    
     	    NodeList nodes = rootElement.getChildNodes();
     	    
+    	    
     	    CandyInstance currentCandyInstance;
+    	    
+    	    List<CandyInstance> candyInstanceList=new ArrayList<CandyInstance>();
+    	    
 
     	    for(int i=0; i<nodes.getLength(); i++){
     	      Node node = nodes.item(i);
@@ -89,30 +112,427 @@ public class Parser {
 
     	        currentCandyInstance.setType(CandyType.getCandyType(child.getAttribute("type")));
     	        
+    	        candyInstanceList.add(currentCandyInstance);
     	        
-    	        //Sugar
+    	        List<Element> ingridientsValuesList=retreiveIngridientsValues(child);
+    	        
+    	        Element sugar = ingridientsValuesList.get(0);
+    	        Element fructose = ingridientsValuesList.get(1);
+    	        Element vanilin = ingridientsValuesList.get(2);
+    	        
+    	        Element protein = ingridientsValuesList.get(3);
+    	        Element fat = ingridientsValuesList.get(4);
+    	        Element carbohydrate = ingridientsValuesList.get(5);
+    	        
+    	        Element production = ingridientsValuesList.get(6);
     	        
     	        
     	        
-    	        //currentCandyInstance.setIngridients(ingridients);
+    	        Ingridient ingSugar=new Ingridients.Ingridient(new Integer(sugar.getAttribute("amount")), sugar.getAttribute("unit"));
+    	        Ingridient ingFructose=new Ingridients.Ingridient(new Integer(fructose.getAttribute("amount")), sugar.getAttribute("unit"));
+    	        Ingridient ingVanilin=new Ingridients.Ingridient(new Integer(vanilin.getAttribute("amount")), sugar.getAttribute("unit"));
     	        
-    	        //currentCandyInstance.setValues(values);
+    	        Ingridients ingridients = new Ingridients(ingSugar, ingFructose, ingVanilin);
     	        
-    	        //currentCandyInstance.setProducion(producion);
+
+    	        Value valProtein=new Values.Value(new Integer(sugar.getAttribute("amount")), sugar.getAttribute("unit"));
+    	        Value valFat=new Values.Value(new Integer(fructose.getAttribute("amount")), sugar.getAttribute("unit"));
+    	        Value valCarbohydrate=new Values.Value(new Integer(vanilin.getAttribute("amount")), sugar.getAttribute("unit"));
+    	        
+    	        Values values = new Values(valProtein, valFat, valCarbohydrate);
+    	        
+    	        
+    	        
+    	        
+    	        currentCandyInstance.setIngridients(ingridients);
+    	        
+    	        currentCandyInstance.setValues(values);
+    	        
+    	        currentCandyInstance.setProducion(production.getTextContent());
     	        
     	    
     	        
-    	        String attribute = child.getAttribute("");
+    	       // String attribute = child.getAttribute("");
     	        
     	      }
+    	      
     	    }
+    	    return candyInstanceList;
     	} catch (SAXException e) {
     	    e.printStackTrace();
     	} catch (IOException e) {
     	    e.printStackTrace();
     	}
+		return null;
     	
     	
     }
 
-}
+	private static List<Element> retreiveIngridientsValues(Element child) {
+		NodeList nodeList=child.getChildNodes();
+		List<Element> elementList=new ArrayList<Element>();
+		for (Integer j = 0; j < nodeList.getLength(); j++) {
+			Node node=nodeList.item(j);
+        	if ( node instanceof Element)
+        		elementList.add((Element)node);
+		}
+		return elementList;
+	}
+
+	public static List<CandyInstance> SAXParse(String xmlPath)
+            throws Exception{
+        class SAXHandler extends DefaultHandler{
+            List<CandyInstance> candies = new ArrayList<CandyInstance>();
+            CandyInstance candyInstance;
+            String content = null;
+            
+            Ingridients currentIngridients;
+            Values currentValues;
+            
+            Ingridient currentIngridient;
+            Value currentValue;
+            
+            
+
+            @Override
+            public void startElement(String uri, String localName, String qName, Attributes  attributes)
+                    throws SAXException {
+                if (qName.equals("CandyInstance")){
+                	
+                	currentIngridients=new Ingridients();
+                	
+                	currentValues=new Values();
+                	
+                    candyInstance = new CandyInstance();
+                    
+                    candyInstance.setId(Integer.parseInt(attributes.getValue("id")));
+                    
+                    ChocolateType chocolate =ChocolateType.getChocolateType(attributes.getValue("chocolate"));
+        	        candyInstance.setChocolate(chocolate);
+        	        
+        	        candyInstance.setEnergy(new Integer(attributes.getValue("energy")));
+        	        
+        	        candyInstance.setHasWater(new Boolean(attributes.getValue("hasWater")));
+        	        
+        	        candyInstance.setName(attributes.getValue("name"));
+
+        	        candyInstance.setType(CandyType.getCandyType(attributes.getValue("type")));
+                } else
+            	if (qName.equals("Ingridient")){
+            		currentIngridient= new Ingridient(new Integer(attributes.getValue("amount")), attributes.getValue("unit"));
+            	} else
+        		if (qName.equals("Value")){
+        			currentValue=new Value(new Integer(attributes.getValue("amount")),attributes.getValue("unit"));
+        		}
+            }
+
+            @Override
+            public void endElement(String uri, String localName,
+                                   String qName) throws SAXException{
+                if (qName.equals("CandyInstance")){
+                	candyInstance.setIngridients(currentIngridients);
+                	candyInstance.setValues(currentValues);
+                
+                	candies.add(candyInstance);
+            	} else
+                if(qName.equals("Ingridient")){
+                	if (content.equals("Sugar")){
+                		currentIngridients.setSugar(currentIngridient);
+                	} else
+            		if (content.equals("Fructose")){
+                		currentIngridients.setFructose(currentIngridient);
+                	} else
+            		if (content.equals("Vanilin")){
+                		currentIngridients.setVanilin(currentIngridient);
+                	} 
+                } else
+            	if (qName.equals("Value")){
+            		if (content.equals("Protein")){
+                		currentValues.setProtein(currentValue);
+                	} else
+            		if (content.equals("Fat")){
+            			currentValues.setFat(currentValue);
+                	} else
+            		if (content.equals("Carbohydrate")){
+            			currentValues.setCarbohydrate(currentValue);
+                	}            		
+            	} else
+        		if (qName.equals("Production")){
+        			candyInstance.setProducion(content);
+        		}
+            }
+
+            @Override
+            public void characters(char[] ch, int start, int length)
+                    throws SAXException{
+                content = String.copyValueOf(ch, start, length).trim();
+            }
+        }
+
+        SAXParserFactory parserFactory = SAXParserFactory.newInstance();
+        SAXParser parser = parserFactory.newSAXParser();
+        SAXHandler handler = new SAXHandler();
+
+        parser.parse(new File(xmlPath), handler);
+        return handler.candies;
+    }
+	
+
+    /**
+     * StAX
+     */
+    public static List<CandyInstance> StAXParse(String xmlPath)
+            throws Exception{
+        List<CandyInstance> candyInstances = new ArrayList<CandyInstance>();
+        CandyInstance candyInstance = new CandyInstance();
+        
+        String tagContext = null;
+        XMLInputFactory factory = XMLInputFactory.newFactory();
+        XMLStreamReader reader =
+                factory.createXMLStreamReader(new FileInputStream(new File(xmlPath)));
+        
+        String localName;
+        
+        Ingridients currentIngridients =new Ingridients();
+        Values currentValues=new Values();
+        
+        Ingridient currentIngridient=new Ingridient();
+        Value currentValue=new Value();
+
+        while(reader.hasNext()){
+            int event = reader.next();
+            
+            switch (event){
+                case XMLStreamConstants.START_ELEMENT:
+                	localName=reader.getLocalName();
+                    if("CandyInstance".equals(localName)){
+                        candyInstance = new CandyInstance();
+                        
+                        currentIngridients=new Ingridients();
+                    	
+                    	currentValues=new Values();
+                    	
+                        candyInstance = new CandyInstance();
+                        
+                        candyInstance.setId(Integer.parseInt(reader.getAttributeValue(null,"id")));
+                        
+                        ChocolateType chocolate =ChocolateType.getChocolateType(reader.getAttributeValue(null,"chocolate"));
+            	        candyInstance.setChocolate(chocolate);
+                        
+            	        candyInstance.setEnergy(new Integer(reader.getAttributeValue(null,"energy")));
+            	        
+            	        candyInstance.setHasWater(new Boolean(reader.getAttributeValue(null,"hasWater")));
+            	      
+            	        candyInstance.setName(reader.getAttributeValue(null,"name"));
+
+            	        candyInstance.setType(CandyType.getCandyType(reader.getAttributeValue(null,"type")));
+                        
+                    } else
+                	if ("Ingridient".equals(localName)){
+                		currentIngridient= new Ingridient(new Integer(reader.getAttributeValue(null,"amount")), reader.getAttributeValue(null,"unit"));
+                	} else
+            		if ("Value".equals(localName)){
+            			currentValue=new Value(new Integer(reader.getAttributeValue(null,"amount")),reader.getAttributeValue(null,"unit"));
+            		}
+                    
+                    break;
+
+                case XMLStreamConstants.CHARACTERS:
+                    tagContext = reader.getText().trim();
+                    break;
+
+                case XMLStreamConstants.END_ELEMENT:
+                	localName=reader.getLocalName();
+                   
+                    if (localName.equals("CandyInstance")){
+                    	candyInstance.setIngridients(currentIngridients);
+                    	candyInstance.setValues(currentValues);
+                    
+                    	candyInstances.add(candyInstance);
+                	} else
+                    if(localName.equals("Ingridient")){
+                    	if (tagContext.equals("Sugar")){
+                    		currentIngridients.setSugar(currentIngridient);
+                    	} else
+                		if (tagContext.equals("Fructose")){
+                    		currentIngridients.setFructose(currentIngridient);
+                    	} else
+                		if (tagContext.equals("Vanilin")){
+                    		currentIngridients.setVanilin(currentIngridient);
+                    	} 
+                    } else
+                	if (localName.equals("Value")){
+                		if (tagContext.equals("Protein")){
+                    		currentValues.setProtein(currentValue);
+                    	} else
+                		if (tagContext.equals("Fat")){
+                			currentValues.setFat(currentValue);
+                    	} else
+                		if (tagContext.equals("Carbohydrate")){
+                			currentValues.setCarbohydrate(currentValue);
+                    	}            		
+                	} else
+            		if (localName.equals("Production")){
+            			candyInstance.setProducion(tagContext);
+            		}
+                    
+                    break;
+                case XMLStreamConstants.START_DOCUMENT:
+                    candyInstances = new ArrayList<CandyInstance>();
+                    break;
+                    
+            }
+            
+        }
+        return candyInstances;
+    }
+    
+    /**
+     * Writing to file
+     */
+    public static void toXML(List<CandyInstance> candyInstanceObjects, String filePath){
+        try{
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            
+            org.w3c.dom.Document document = builder.newDocument();
+            Element rootElement = document.createElement("Сandy");
+            document.appendChild(rootElement);
+            
+            for(CandyInstance currCandyInstanceObject : candyInstanceObjects){
+                Element candyInstance = document.createElement("candyInstance");
+                rootElement.appendChild(candyInstance);
+
+                Attr attrId = document.createAttribute("id");
+                attrId.setValue(Integer.toString(currCandyInstanceObject.getId()));
+                candyInstance.setAttributeNode(attrId);
+                
+                Attr attrChocolate= document.createAttribute("chocolate");
+                attrChocolate.setValue(currCandyInstanceObject.getChocolate().toString());
+                candyInstance.setAttributeNode(attrChocolate);
+                
+                Attr attrEnergy= document.createAttribute("energy");
+                attrEnergy.setValue(currCandyInstanceObject.getEnergy().toString());
+                candyInstance.setAttributeNode(attrEnergy);
+                
+                Attr attrHasWater= document.createAttribute("hasWater");
+                attrHasWater.setValue(new Boolean(currCandyInstanceObject.isHasWater()).toString());
+                candyInstance.setAttributeNode(attrHasWater);
+                
+                Attr attrName= document.createAttribute("name");
+                attrName.setValue(currCandyInstanceObject.getName().toString());
+                candyInstance.setAttributeNode(attrName);
+                
+                Attr attrType= document.createAttribute("type");
+                attrType.setValue(currCandyInstanceObject.getType().toString());
+                candyInstance.setAttributeNode(attrType);
+                
+                Attr attrAmount;
+                Attr attrUnit;
+                
+                // Ingridients
+                Element sugar = document.createElement("Ingridient");
+                
+                sugar.appendChild(document.createTextNode("Sugar"));
+                
+	                attrAmount= document.createAttribute("amount");
+	                attrAmount.setValue(currCandyInstanceObject.getIngridients().getSugar().getAmount().toString());
+	                sugar.setAttributeNode(attrAmount);
+	                
+	                attrUnit= document.createAttribute("unit");
+	                attrUnit.setValue(currCandyInstanceObject.getIngridients().getSugar().getUnit());
+	                sugar.setAttributeNode(attrUnit);
+	                
+                candyInstance.appendChild(sugar);
+                
+                Element fructose = document.createElement("Ingridient");
+                
+                fructose.appendChild(document.createTextNode("fructose"));
+                
+	                attrAmount= document.createAttribute("amount");
+	                attrAmount.setValue(currCandyInstanceObject.getIngridients().getFructose().getAmount().toString());
+	                fructose.setAttributeNode(attrAmount);
+	                
+	                attrUnit= document.createAttribute("unit");
+	                attrUnit.setValue(currCandyInstanceObject.getIngridients().getFructose().getUnit());
+	                fructose.setAttributeNode(attrUnit);
+	                
+                candyInstance.appendChild(fructose);
+                
+                Element vanilin = document.createElement("Ingridient");
+                
+                vanilin.appendChild(document.createTextNode("vanilin"));
+                
+	                attrAmount= document.createAttribute("amount");
+	                attrAmount.setValue(currCandyInstanceObject.getIngridients().getVanilin().getAmount().toString());
+	                vanilin.setAttributeNode(attrAmount);
+	                
+	                attrUnit= document.createAttribute("unit");
+	                attrUnit.setValue(currCandyInstanceObject.getIngridients().getVanilin().getUnit());
+	                vanilin.setAttributeNode(attrUnit);
+	                
+                candyInstance.appendChild(vanilin);
+                // end Ingridients
+                //Values
+                
+                Element protein = document.createElement("Value");
+                
+                protein.appendChild(document.createTextNode("Sugar"));
+                
+	                attrAmount= document.createAttribute("amount");
+	                attrAmount.setValue(currCandyInstanceObject.getValues().getProtein().getAmount().toString());
+	                protein.setAttributeNode(attrAmount);
+	                
+	                attrUnit= document.createAttribute("unit");
+	                attrUnit.setValue(currCandyInstanceObject.getValues().getProtein().getUnit());
+	                protein.setAttributeNode(attrUnit);
+	                
+                candyInstance.appendChild(protein);
+                
+                Element fat = document.createElement("Value");
+                
+                fat.appendChild(document.createTextNode("fat"));
+                
+	                attrAmount= document.createAttribute("amount");
+	                attrAmount.setValue(currCandyInstanceObject.getValues().getFat().getAmount().toString());
+	                fat.setAttributeNode(attrAmount);
+	                
+	                attrUnit= document.createAttribute("unit");
+	                attrUnit.setValue(currCandyInstanceObject.getValues().getFat().getUnit());
+	                fat.setAttributeNode(attrUnit);
+	                
+                candyInstance.appendChild(fat);
+                
+                Element carbohydrate = document.createElement("Value");
+                
+                carbohydrate.appendChild(document.createTextNode("carbohydrate"));
+                
+	                attrAmount= document.createAttribute("amount");
+	                attrAmount.setValue(currCandyInstanceObject.getValues().getCarbohydrate().getAmount().toString());
+	                carbohydrate.setAttributeNode(attrAmount);
+	                
+	                attrUnit= document.createAttribute("unit");
+	                attrUnit.setValue(currCandyInstanceObject.getValues().getCarbohydrate().getUnit());
+	                carbohydrate.setAttributeNode(attrUnit);
+	                
+                candyInstance.appendChild(carbohydrate);
+                
+                // end Values
+
+                
+            }
+
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            DOMSource source = new DOMSource(document);
+            StreamResult result = new StreamResult(new File(filePath));
+
+            transformer.transform(source, result);
+        } catch (ParserConfigurationException e) {
+            e.printStackTrace();
+        }
+        catch (TransformerException e){
+        	e.printStackTrace();
+        }
+    }
+    }

@@ -11,16 +11,13 @@ xsi:noNamespaceSchemaLocation="MyXSD.xsd">
         <Production>FirmA</Production>
     </CandyInstance>
 
-    <CandyInstance id="1" name="yanukontik" energy="9000" type="chocolate" hasWater="true" chocolate="white" >
-        <Ingridient amount="1" unit="miligram">Sugar</Ingridient>
-        <Ingridient amount="10" unit="miligram">Fructose</Ingridient>
-        <Ingridient amount="1" unit="miligram">Vanilin</Ingridient>
-        <Value amount="3" unit="gram">Protein</Value>
-        <Value amount="4" unit="gram">Fat</Value>
-        <Value amount="5" unit="gram">Carbohydrate</Value>
+    <CandyInstance id="1" name="kiev evening" energy="100500" type="chocolate" hasWater="true" chocolate="black" >
+        <Ingridient amount="2" unit="miligram">Sugar</Ingridient>
+        <Ingridient amount="20" unit="miligram">Fructose</Ingridient>
+        <Ingridient amount="2" unit="miligram">Vanilin</Ingridient>
+        <Value amount="1" unit="gram">Protein</Value>
+        <Value amount="2" unit="gram">Fat</Value>
+        <Value amount="3" unit="gram">Carbohydrate</Value>
         <Production>FirmA</Production>
     </CandyInstance>
-    
-    
-    
 </Candy>
